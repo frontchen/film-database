@@ -1,10 +1,5 @@
 import express from "express";
-import api from "./api";
-
+import routes from "./routes";
 const app = express();
-app.get("/", (req, res) => {
-  api.getListItem({ m: "vod-detail-id-41849.html" }).then(data => {
-    res.json(data);
-  });
-});
-app.listen(5000);
+routes(app);
+app.listen(5001);

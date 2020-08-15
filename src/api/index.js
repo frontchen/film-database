@@ -5,8 +5,8 @@ import config from "../config/index";
 // 公共接口
 const services = config.apiConfig.commonBase;
 const services1 = {
-  url: "http://api.245bt.chenzhen.work",
-  port: 3000
+  url: "http://192.168.1.90",
+  port: 3005
 };
 let api = {
   /********************* www.1156zy.com api *****************/
@@ -16,7 +16,6 @@ let api = {
     return new Promise((resolve, reject) => {
       http.get("", params, services).then(
         res => {
-          console.log(["html", res, services]);
           return resolve(parse.parseListHtml(res || ""));
         },
         err => {

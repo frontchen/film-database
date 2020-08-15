@@ -14,7 +14,7 @@ const http = {
       }
     });
   },
-  get: (path, params, { url = "", port = 80, code = false }) => {
+  get: (path, params, { url = "", port = 3005, code = false }) => {
     return new Promise((resolve, reject) => {
       let apiUrl = `${config.apiUrl}:${port}${config.apiBaseUrl}${path}`;
       if (url) {

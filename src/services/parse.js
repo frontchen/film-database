@@ -24,7 +24,7 @@ let parse = {
         slideDown.each((index, item) => {
           let href = $(item).attr("href");
           let params = {};
-          if (href.indexOf("https") < 0) {
+          if (href && href.indexOf("https") < 0) {
             params = querystring.parse(href.substr(2));
             let obj = {
               content: $(item).text()
@@ -39,7 +39,7 @@ let parse = {
       let href = $(a).attr("href");
       let params = {};
       // 过滤网址链接和插件链接
-      if (href.indexOf("https") < 0 && href.indexOf("art") < 0) {
+      if (href && href.indexOf("https") < 0 && href.indexOf("art") < 0) {
         params = querystring.parse(href.substr(2));
         let obj = {
           content: $(a).text(),
@@ -212,6 +212,14 @@ let parse = {
         });
       }
     });
+
+    console.log([
+      "拉取list",
+      {
+        tabs,
+        body
+      }
+    ]);
     return {
       tabs,
       body
