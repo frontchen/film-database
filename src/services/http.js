@@ -16,17 +16,19 @@ const http = {
   },
   get: (path, params, { url = "", port = 3005, code = false }) => {
     return new Promise((resolve, reject) => {
-      let apiUrl = `${config.apiUrl}:${port}${config.apiBaseUrl}${path}`;
+      let apiUrl = `${config.apiUrl}${port ? ":" + port : ""}${
+        config.apiBaseUrl
+      }${path}`;
       if (url) {
-        apiUrl = `${url}:${port}${config.apiBaseUrl}${path}`;
+        apiUrl = `${url}${port ? ":" + port : ""}${config.apiBaseUrl}${path}`;
       }
       return superagent
         .get(apiUrl)
         .query(params)
-        .then(res => {
+        .then((res) => {
           return http.formatData(code, res).then(resolve, reject);
         })
-        .catch(err => {
+        .catch((err) => {
           return reject(err || networkErr);
         });
     });
@@ -47,9 +49,11 @@ const http = {
         ContentType = "application/x-www-form-urlencoded";
       }
 
-      let apiUrl = `${config.apiUrl}:${port}${config.apiBaseUrl}${path}`;
+      let apiUrl = `${config.apiUrl}${port ? ":" + port : ""}${
+        config.apiBaseUrl
+      }${path}`;
       if (url) {
-        apiUrl = `${url}:${port}${Config.apiBaseUrl}${path}`;
+        apiUrl = `${url}${port ? ":" + port : ""}${Config.apiBaseUrl}${path}`;
       }
 
       return instance
@@ -57,14 +61,14 @@ const http = {
         .set("Content-Type", ContentType)
         .send(data)
         .then(
-          res => {
+          (res) => {
             return http.formatData(code, res).then(resolve, reject);
           },
-          err => {
+          (err) => {
             return reject(err.msg || networkErr);
           }
         );
     });
-  }
+  },
 };
 export default http;

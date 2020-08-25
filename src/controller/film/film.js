@@ -8,6 +8,7 @@ import userAgents from "../../services/userAgent";
 const headerPath = path.resolve(__dirname, "../../data/header.json");
 const bodyPath = path.resolve(__dirname, "../../data/body.json");
 const listPath = path.resolve(__dirname, "../../data/list.json");
+const itemPath = path.resolve(__dirname, "../../data/item.json");
 const ipPath = path.resolve(__dirname, "../../data/ip.json");
 class Film {
   getList = async (req, res) => {
@@ -30,10 +31,10 @@ class Film {
     //文件内容为空 存数据
     if (!bodyData || bodyData === "null") {
       let bodyList = [];
-      let bodyApis = headerData.map(item => {
+      let bodyApis = headerData.map((item) => {
         return this.getBodyList(item.path);
       });
-      Promise.all(bodyApis).then(res => {
+      Promise.all(bodyApis).then((res) => {
         bodyList = JSON.stringify(res);
         fs.writeFileSync(bodyPath, bodyList);
       });
@@ -42,7 +43,7 @@ class Film {
       return {
         currentPage: v.currentPage,
         totalPage: v.totalPage,
-        path: headerData[i].path
+        path: headerData[i].path,
       };
     });
     let baseUrl = `http://localhost:3005`;
@@ -66,7 +67,7 @@ class Film {
             path = newPath.join(".");
             path = `${baseUrl}${path}`;
           }
-          let ipItem = vm.getProxyIp();
+
           let userAgent =
             userAgents[parseInt(Math.random() * userAgents.length)];
           allListApis.push({
@@ -78,46 +79,81 @@ class Film {
               done();
             },
             headers: {
-              ["User-Agent"]: userAgent
+              ["User-Agent"]: userAgent,
             },
-            proxy: `http://${ipItem.ip}:${ipItem.port}`
+            // proxy: `http://${ipItem.ip}:${ipItem.port}`
           });
         }
       }
       crawler.queue(allListApis);
-      // crawler.on("schedule", function(options) {
-
-      //   options.proxy = `http://${ipItem.ip}:${ipItem.port}`;
-      // });
-      crawler.on("request", function(options) {
+      crawler.on("schedule", function (options) {
+        let ipItem = vm.getProxyIp();
+        options.proxy = `http://${ipItem.ip}:${ipItem.port}`;
+      });
+      crawler.on("request", function (options) {
         count += 1;
         console.log(`当前请求第${count}次`);
       });
       /** 队列全部运行完调用 */
       crawler.on("drain", () => {
-        result = parse.parse245BtListHtml(result);
-        result = result.reduce((cur, next) => {
-          return (cur.body || []).concat(next.body || []);
-        }, {});
+        result = parse.parse245BtListHtml(result) || {};
+        result = result.body;
         result = JSON.stringify(result);
         fs.writeFileSync(listPath, result);
-        res.json(result);
       });
     }
-
-    res.json(bodyData);
+    //读取item文件
+    let itemData = fs.readFileSync(itemPath);
+    itemData = itemData.toString();
+    itemData = itemData ? JSON.parse(itemData) : null;
+    if (!itemData || itemData === "null") {
+      let appItemApis = [];
+      let itemDatas = [];
+      let count = 0;
+      listData.forEach((item) => {
+        let userAgent = userAgents[parseInt(Math.random() * userAgents.length)];
+        appItemApis.push({
+          url: item.path,
+          callback: (error, res, done) => {
+            if (!error) {
+              let itemContent = parse.parse245BtItemHtml(res.body);
+              itemDatas.push(itemContent);
+            }
+            done();
+          },
+          headers: {
+            ["User-Agent"]: userAgent,
+          },
+          // proxy: `http://${ipItem.ip}:${ipItem.port}`
+        });
+        crawler.queue(appItemApis);
+        crawler.on("schedule", function (options) {
+          let ipItem = vm.getProxyIp();
+          options.proxy = `http://${ipItem.ip}:${ipItem.port}`;
+        });
+        crawler.on("request", function (options) {
+          count += 1;
+          console.log(`当前请求第${count}次`);
+        });
+        crawler.on("drain", () => {
+          itemDatas = JSON.stringify(itemDatas);
+          fs.writeFileSync(listPath, itemDatas);
+        });
+      });
+    }
+    res.json(headerData);
   };
 
   getHeader = async () => {
-    let headerList = await api.get245BtHeader({}).catch(err => {
+    let headerList = await api.get245BtHeader({}).catch((err) => {
       console.log(["header", err]);
     });
     return headerList || [];
   };
-  getBodyList = async path => {
+  getBodyList = async (path) => {
     let list = [];
     if (!path) return list;
-    list = await api.get245BtTabData(path).catch(err => {
+    list = await api.get245BtTabData(path).catch((err) => {
       console.log(["list", err]);
     });
     return list;
